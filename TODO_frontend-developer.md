@@ -439,7 +439,7 @@ export const useToastStore = create<ToastStore>((set) => ({
   add: (toast) =>
     set((state) => ({
       toasts: [
-        ...state.toasts.slice(-4), // keep max 5
+        ...state.toasts.slice(-4), // keep last 4 to allow room for new toast (max 5 total)
         { ...toast, id: crypto.randomUUID(), duration: toast.duration ?? 5000 },
       ],
     })),
@@ -555,7 +555,7 @@ npx lhci autorun
 ## Quality Assurance Task Checklist
 
 - [ ] All components compile without TypeScript errors (`npx tsc --noEmit` exits 0)
-- [ ] Responsive design tested at 320 px, 640 px, 768 px, 1024 px, 1280 px, 1440 px, and 2560 px
+- [ ] Responsive design tested at 320 px, 640 px, 768 px, 1024 px, 1280 px, 1440 px, 1536 px, and 2560 px
 - [ ] Keyboard navigation reaches all interactive elements (manual + Playwright test)
 - [ ] Color contrast meets WCAG AA minimums verified with axe-core or Lighthouse accessibility audit
 - [ ] Core Web Vitals pass Lighthouse audit with scores above 90 (Performance, Accessibility, Best Practices, SEO)
