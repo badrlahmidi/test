@@ -41,14 +41,13 @@ export async function GET() {
       // Total clients
       prisma.client.count({ where: { tenantId } }),
 
-      // Low stock products
-      prisma.product.count({
-        where: {
-          tenantId,
-          isActive: true,
-          stockQty: { lte: prisma.product.fields.minStockAlert as never },
-        },
-      }),
+      // Low stock products (compare stockQty with minStockAlert using raw SQL)
+      prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT COUNT(*)::bigint as count FROM products
+        WHERE "tenantId" = ${tenantId}
+          AND "isActive" = true
+          AND "stockQty" <= "minStockAlert"
+      `.then((result) => Number(result[0]?.count ?? 0)),
 
       // Overdue invoices
       prisma.invoice.count({
