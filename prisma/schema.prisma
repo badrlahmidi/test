@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+  ACCOUNTANT
+}
+
+enum Plan {
+  FREE
+  STARTER
+  BUSINESS
+  ENTERPRISE
+}
+
+enum ClientType {
+  COMPANY
+  INDIVIDUAL
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIALLY_PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CONVERTED
+}
+
+enum PaymentMethod {
+  CASH
+  CHECK
+  TRANSFER
+  CARD
+  MOBILE_MONEY
+  OTHER
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  ice       String?  @unique
+  ifNumber  String?
+  rc        String?
+  cnss      String?
+  address   String?
+  city      String?
+  phone     String?
+  email     String?
+  logo      String?
+  currency  String   @default("MAD")
+  tvaRate   Decimal  @default(20)
+  plan      Plan     @default(FREE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  clients  Client[]
+  products Product[]
+  invoices Invoice[]
+  quotes   Quote[]
+  payments Payment[]
+
+  @@map("tenants")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(MEMBER)
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("users")
+}
+
+model Client {
+  id       String     @id @default(cuid())
+  tenantId String
+  tenant   Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name     String
+  email    String?
+  phone    String?
+  ice      String?
+  address  String?
+  city     String?
+  type     ClientType @default(COMPANY)
+
+  invoices Invoice[]
+  quotes   Quote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("clients")
+}
+
+model Product {
+  id            String  @id @default(cuid())
+  tenantId      String
+  tenant        Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  unitPrice     Decimal
+  tvaRate       Decimal @default(20)
+  unit          String  @default("unité")
+  sku           String?
+  stockQty      Int     @default(0)
+  minStockAlert Int     @default(5)
+  category      String?
+  isActive      Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("products")
+}
+
+model Invoice {
+  id       String        @id @default(cuid())
+  tenantId String
+  tenant   Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  number   String
+  clientId String
+  client   Client        @relation(fields: [clientId], references: [id])
+  issueDate DateTime     @default(now())
+  dueDate  DateTime
+  status   InvoiceStatus @default(DRAFT)
+  subtotal Decimal
+  tvaAmount Decimal
+  total    Decimal
+  notes    String?
+
+  items    InvoiceItem[]
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, number])
+  @@index([tenantId])
+  @@index([clientId])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId   String?
+  description String
+  quantity    Decimal
+  unitPrice   Decimal
+  tvaRate     Decimal @default(20)
+  total       Decimal
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+model Quote {
+  id       String      @id @default(cuid())
+  tenantId String
+  tenant   Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  number   String
+  clientId String
+  client   Client      @relation(fields: [clientId], references: [id])
+  issueDate DateTime   @default(now())
+  validUntil DateTime
+  status   QuoteStatus @default(DRAFT)
+  subtotal Decimal
+  tvaAmount Decimal
+  total    Decimal
+  notes    String?
+  convertedToInvoiceId String?
+
+  items QuoteItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, number])
+  @@index([tenantId])
+  @@index([clientId])
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id          String @id @default(cuid())
+  quoteId     String
+  quote       Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId   String?
+  description String
+  quantity    Decimal
+  unitPrice   Decimal
+  tvaRate     Decimal @default(20)
+  total       Decimal
+
+  @@index([quoteId])
+  @@map("quote_items")
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  tenantId  String
+  tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoiceId String
+  invoice   Invoice       @relation(fields: [invoiceId], references: [id])
+  amount    Decimal
+  method    PaymentMethod
+  reference String?
+  paidAt    DateTime      @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([invoiceId])
+  @@map("payments")
+}
