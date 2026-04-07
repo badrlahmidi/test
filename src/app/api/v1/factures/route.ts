@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     let tvaAmount = 0;
     const processedItems = items.map((item) => {
       const lineTotal = calculateLineTotal(item.quantity, item.unitPrice);
-      const lineTva = calculateTva(lineTotal, item.tvaRate);
+      const lineTva = calculateTva(lineTotal, item.tvaRate ?? 20);
       subtotal += lineTotal;
       tvaAmount += lineTva;
       return {

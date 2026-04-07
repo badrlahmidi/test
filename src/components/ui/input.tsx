@@ -14,7 +14,8 @@ export interface InputProps
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, helpText, error, leftAddon, rightAddon, id, ...props }, ref) => {
-    const inputId = id || React.useId();
+    const generatedId = React.useId();
+    const inputId = id || generatedId;
     const helpId = `${inputId}-help`;
     const errorId = `${inputId}-error`;
 

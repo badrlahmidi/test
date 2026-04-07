@@ -1,7 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
 import {
   DollarSign,
@@ -18,7 +23,7 @@ async function fetchDashboard(): Promise<DashboardStats> {
   return res.json();
 }
 
-export default function DashboardPage() {
+export default function DashboardOverviewPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
     queryFn: fetchDashboard,
@@ -87,7 +92,9 @@ export default function DashboardPage() {
               <CardContent>
                 <p className="text-2xl font-bold">{stat.value}</p>
                 {stat.subtitle && (
-                  <p className="mt-1 text-xs text-gray-500">{stat.subtitle}</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {stat.subtitle}
+                  </p>
                 )}
               </CardContent>
             </Card>

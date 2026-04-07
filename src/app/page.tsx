@@ -5,38 +5,73 @@ const features = [
   {
     icon: FileText,
     title: "Facturation",
-    description: "Créez et envoyez des factures professionnelles conformes à la réglementation marocaine (ICE, TVA).",
+    description:
+      "Créez et envoyez des factures professionnelles conformes à la réglementation marocaine (ICE, TVA).",
   },
   {
     icon: Users,
     title: "Gestion clients",
-    description: "Base de données clients complète avec historique des transactions et suivi des créances.",
+    description:
+      "Base de données clients complète avec historique des transactions et suivi des créances.",
   },
   {
     icon: Package,
     title: "Stock & Produits",
-    description: "Catalogue produits avec suivi de stock en temps réel et alertes automatiques.",
+    description:
+      "Catalogue produits avec suivi de stock en temps réel et alertes automatiques.",
   },
   {
     icon: BarChart3,
     title: "Rapports",
-    description: "Tableaux de bord et rapports détaillés pour piloter votre activité.",
+    description:
+      "Tableaux de bord et rapports détaillés pour piloter votre activité.",
   },
   {
     icon: Shield,
     title: "Sécurisé",
-    description: "Données chiffrées, accès par rôle, et hébergement conforme aux normes.",
+    description:
+      "Données chiffrées, accès par rôle, et hébergement conforme aux normes.",
   },
   {
     icon: Zap,
     title: "Simple & Rapide",
-    description: "Interface intuitive pensée pour les TPE/PME. Prise en main en 5 minutes.",
+    description:
+      "Interface intuitive pensée pour les TPE/PME. Prise en main en 5 minutes.",
   },
 ];
 
 export default function HomePage() {
   return (
-    <div>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="border-b">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+          <Link href="/" className="text-xl font-bold text-blue-600">
+            ERP Maroc
+          </Link>
+          <nav className="flex items-center gap-6">
+            <Link
+              href="/pricing"
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Tarifs
+            </Link>
+            <Link
+              href="/login"
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Connexion
+            </Link>
+            <Link
+              href="/register"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Essai gratuit
+            </Link>
+          </nav>
+        </div>
+      </header>
+
       {/* Hero */}
       <section className="bg-gradient-to-b from-blue-50 to-white px-4 py-20 text-center">
         <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">

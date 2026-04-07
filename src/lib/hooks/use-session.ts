@@ -1,7 +1,6 @@
 "use client";
 
 import { useSession as useNextAuthSession } from "next-auth/react";
-import type { Role } from "@prisma/client";
 
 export function useCurrentUser() {
   const { data: session, status } = useNextAuthSession();
@@ -12,7 +11,7 @@ export function useCurrentUser() {
           id: string;
           email: string;
           name: string;
-          role: Role;
+          role: string;
           tenantId: string;
         }
       | undefined,

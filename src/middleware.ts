@@ -1,26 +1,10 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 
-export default auth((req) => {
-  const { pathname } = req.nextUrl;
+const { auth } = NextAuth(authConfig);
 
-  // Public routes that don't require auth
-  const publicPaths = ["/", "/pricing", "/login", "/register"];
-  const isPublic =
-    publicPaths.includes(pathname) ||
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/_next") ||
-    pathname.includes(".");
-
-  if (isPublic) return;
-
-  // If not authenticated, redirect to login
-  if (!req.auth) {
-    const loginUrl = new URL("/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return Response.redirect(loginUrl);
-  }
-});
+export default auth;
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/auth).*)"],
 };
