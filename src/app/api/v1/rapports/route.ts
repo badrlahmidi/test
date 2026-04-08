@@ -17,6 +17,7 @@ export async function GET() {
       totalClients,
       lowStockProducts,
       overdueInvoices,
+      monthlyExpenses,
     ] = await Promise.all([
       // Monthly revenue
       prisma.invoice.aggregate({
@@ -57,15 +58,29 @@ export async function GET() {
           dueDate: { lt: now },
         },
       }),
+
+      // Monthly expenses
+      prisma.expense.aggregate({
+        where: {
+          tenantId,
+          expenseDate: { gte: startOfMonth },
+        },
+        _sum: { amount: true },
+      }),
     ]);
 
+    const revenue = Number(monthlyRevenue._sum.total || 0);
+    const expenses = Number(monthlyExpenses._sum.amount || 0);
+
     return NextResponse.json({
-      monthlyRevenue: Number(monthlyRevenue._sum.total || 0),
+      monthlyRevenue: revenue,
       pendingInvoices: pendingInvoices._count,
       pendingAmount: Number(pendingInvoices._sum.total || 0),
       totalClients,
       lowStockProducts,
       overdueInvoices,
+      monthlyExpenses: expenses,
+      netProfit: revenue - expenses,
     });
   } catch (error) {
     return serverError(error);

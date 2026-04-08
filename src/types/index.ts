@@ -29,4 +29,6 @@ export interface DashboardStats {
   totalClients: number;
   lowStockProducts: number;
   overdueInvoices: number;
+  monthlyExpenses: number;
+  netProfit: number;
 }

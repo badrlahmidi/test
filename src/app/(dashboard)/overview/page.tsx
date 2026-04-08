@@ -2,6 +2,7 @@
 
 import { useDashboard } from "@/lib/hooks/use-dashboard";
 import { useInvoices } from "@/lib/hooks/use-invoices";
+import { usePendingTasksCount } from "@/lib/hooks/use-tasks";
 import {
   Card,
   CardContent,
@@ -16,6 +17,10 @@ import {
   Users,
   Package,
   AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  Scale,
+  ClipboardList,
 } from "lucide-react";
 import {
   AreaChart,
@@ -27,6 +32,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { DashboardStats } from "@/types";
+import Link from "next/link";
 
 function buildMonthlyChart(invoices: Array<{ issueDate: string; total: number; status: string }>) {
   const map = new Map<string, { month: string; revenue: number }>();
@@ -50,15 +56,17 @@ function KpiCard({
   subtitle,
   icon: Icon,
   color,
+  href,
 }: {
   title: string;
   value: string;
   subtitle?: string;
   icon: React.ElementType;
   color: string;
+  href?: string;
 }) {
-  return (
-    <Card>
+  const content = (
+    <Card className={href ? "cursor-pointer transition hover:shadow-md" : ""}>
       <CardHeader className="mb-0 flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-gray-500">{title}</CardTitle>
         <div className={`rounded-lg p-2 ${color}`}>
@@ -71,15 +79,30 @@ function KpiCard({
       </CardContent>
     </Card>
   );
+  return href ? <Link href={href}>{content}</Link> : content;
 }
 
-function buildStats(data: DashboardStats) {
+function buildStats(data: DashboardStats, pendingTasks: number) {
+  const netProfit = data.netProfit ?? 0;
   return [
     {
       title: "CA du mois",
       value: formatCurrency(data.monthlyRevenue),
-      icon: DollarSign,
+      icon: TrendingUp,
       color: "text-green-600 bg-green-100",
+    },
+    {
+      title: "Dépenses du mois",
+      value: formatCurrency(data.monthlyExpenses ?? 0),
+      icon: TrendingDown,
+      color: "text-red-600 bg-red-100",
+      href: "/depenses",
+    },
+    {
+      title: "Résultat net",
+      value: formatCurrency(netProfit),
+      icon: Scale,
+      color: netProfit >= 0 ? "text-emerald-600 bg-emerald-100" : "text-red-600 bg-red-100",
     },
     {
       title: "Factures en attente",
@@ -87,18 +110,21 @@ function buildStats(data: DashboardStats) {
       subtitle: formatCurrency(data.pendingAmount),
       icon: FileText,
       color: "text-blue-600 bg-blue-100",
+      href: "/factures",
     },
     {
       title: "Total clients",
       value: `${data.totalClients}`,
       icon: Users,
       color: "text-purple-600 bg-purple-100",
+      href: "/clients",
     },
     {
       title: "Alertes stock",
       value: `${data.lowStockProducts}`,
       icon: Package,
       color: "text-orange-600 bg-orange-100",
+      href: "/produits",
     },
     {
       title: "Factures en retard",
@@ -106,12 +132,20 @@ function buildStats(data: DashboardStats) {
       icon: AlertTriangle,
       color: "text-red-600 bg-red-100",
     },
+    {
+      title: "Tâches à faire",
+      value: `${pendingTasks}`,
+      icon: ClipboardList,
+      color: "text-indigo-600 bg-indigo-100",
+      href: "/taches",
+    },
   ];
 }
 
 export default function DashboardOverviewPage() {
   const { data, isLoading } = useDashboard();
   const { data: invoicesData } = useInvoices({ pageSize: 200 });
+  const { data: pendingTasks = 0 } = usePendingTasksCount();
 
   const chartData = buildMonthlyChart(invoicesData?.data ?? []);
 
@@ -120,14 +154,14 @@ export default function DashboardOverviewPage() {
       <h1 className="mb-6 text-2xl font-bold text-gray-900">Tableau de bord</h1>
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, i) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
       ) : data ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {buildStats(data).map((stat) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {buildStats(data, pendingTasks).map((stat) => (
             <KpiCard key={stat.title} {...stat} />
           ))}
         </div>

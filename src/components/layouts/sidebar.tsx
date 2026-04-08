@@ -15,6 +15,7 @@ import {
   Settings,
   X,
   TrendingDown,
+  ClipboardList,
 } from "lucide-react";
 
 const navigation = [
@@ -25,6 +26,7 @@ const navigation = [
   { name: "Produits", href: "/produits", icon: Package },
   { name: "Paiements", href: "/paiements", icon: CreditCard },
   { name: "Dépenses", href: "/depenses", icon: TrendingDown },
+  { name: "Tâches", href: "/taches", icon: ClipboardList },
   { name: "Rapports", href: "/rapports", icon: BarChart3 },
   { name: "Paramètres", href: "/parametres", icon: Settings },
 ];

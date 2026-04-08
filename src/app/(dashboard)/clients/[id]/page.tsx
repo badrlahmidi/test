@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useClient, useCreateClient, useUpdateClient } from "@/lib/hooks/use-clients";
 import { ClientForm } from "@/components/forms/client-form";
@@ -10,11 +11,12 @@ import {
   CardHeader,
   CardTitle,
   Badge,
+  Modal,
   SkeletonCard,
 } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useToastStore } from "@/stores/toast-store";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, FileText, Link, Copy, Trash2 } from "lucide-react";
 import type { ClientFormData } from "@/lib/validations/client";
 
 const statusVariant: Record<string, "default" | "primary" | "success" | "warning" | "danger"> = {
@@ -37,6 +39,11 @@ export default function ClientDetailPage() {
   const id = params.id as string;
   const isNew = id === "nouveau";
 
+  const [portalOpen, setPortalOpen] = useState(false);
+  const [portalUrl, setPortalUrl] = useState<string | null>(null);
+  const [portalExpiry, setPortalExpiry] = useState<string | null>(null);
+  const [generatingPortal, setGeneratingPortal] = useState(false);
+
   const { data: client, isLoading } = useClient(isNew ? "" : id);
   const createClient = useCreateClient();
   const updateClient = useUpdateClient();
@@ -54,6 +61,36 @@ export default function ClientDetailPage() {
     } catch {
       addToast({ variant: "error", title: "Erreur lors de l'enregistrement" });
     }
+  }
+
+  async function handleGeneratePortal() {
+    setGeneratingPortal(true);
+    try {
+      const res = await fetch(`/api/v1/clients/${id}/portal-token`, { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message);
+      const url = `${window.location.origin}/p/${json.token}`;
+      setPortalUrl(url);
+      setPortalExpiry(json.expiresAt);
+      setPortalOpen(true);
+    } catch {
+      addToast({ variant: "error", title: "Erreur génération du lien portail" });
+    } finally {
+      setGeneratingPortal(false);
+    }
+  }
+
+  async function handleCopyPortal() {
+    if (!portalUrl) return;
+    await navigator.clipboard.writeText(portalUrl);
+    addToast({ variant: "success", title: "Lien copié dans le presse-papier" });
+  }
+
+  async function handleRevokePortal() {
+    await fetch(`/api/v1/clients/${id}/portal-token`, { method: "DELETE" });
+    setPortalUrl(null);
+    setPortalOpen(false);
+    addToast({ variant: "success", title: "Accès portail révoqué" });
   }
 
   if (isLoading && !isNew) {
@@ -74,6 +111,18 @@ export default function ClientDetailPage() {
         <h1 className="text-2xl font-bold text-gray-900">
           {isNew ? "Nouveau client" : (client?.name ?? "Client")}
         </h1>
+        {!isNew && (
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<Link className="h-4 w-4" />}
+            onClick={handleGeneratePortal}
+            isLoading={generatingPortal}
+            className="ml-auto"
+          >
+            Portail client
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -125,7 +174,41 @@ export default function ClientDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Portal modal */}
+      <Modal
+        isOpen={portalOpen}
+        onClose={() => setPortalOpen(false)}
+        title="Lien portail client"
+        description={portalExpiry ? `Expire le ${formatDate(portalExpiry)}` : undefined}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Partagez ce lien avec votre client pour qu&apos;il puisse consulter ses factures et devis sans
+            avoir besoin d&apos;un compte.
+          </p>
+          <div className="flex gap-2">
+            <input
+              readOnly
+              value={portalUrl ?? ""}
+              className="flex-1 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 focus:outline-none"
+            />
+            <Button size="sm" variant="secondary" onClick={handleCopyPortal} leftIcon={<Copy className="h-4 w-4" />}>
+              Copier
+            </Button>
+          </div>
+          <div className="flex justify-between pt-2">
+            <Button variant="destructive" size="sm" leftIcon={<Trash2 className="h-4 w-4" />} onClick={handleRevokePortal}>
+              Révoquer l&apos;accès
+            </Button>
+            <Button size="sm" onClick={() => window.open(portalUrl ?? "", "_blank")}>
+              Ouvrir le portail
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
+
 

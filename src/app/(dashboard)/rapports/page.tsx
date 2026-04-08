@@ -2,6 +2,7 @@
 
 import { useDashboard } from "@/lib/hooks/use-dashboard";
 import { useInvoices } from "@/lib/hooks/use-invoices";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, Button, SkeletonCard } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -15,8 +16,24 @@ import {
   BarChart,
   Bar,
   Legend,
+  LineChart,
+  Line,
+  ReferenceLine,
 } from "recharts";
-import { Download } from "lucide-react";
+import { Download, TrendingUp, TrendingDown, Scale } from "lucide-react";
+import type { PlMonthEntry } from "@/app/api/v1/rapports/pl/route";
+
+function useMonthlyPL(months = 6) {
+  return useQuery<{ data: PlMonthEntry[] }>({
+    queryKey: ["rapports-pl", months],
+    queryFn: async () => {
+      const res = await fetch(`/api/v1/rapports/pl?months=${months}`);
+      if (!res.ok) throw new Error("Erreur P&L");
+      return res.json();
+    },
+    staleTime: 60_000,
+  });
+}
 
 function buildMonthlyData(invoices: Array<{ issueDate: string; total: number; status: string }>) {
   const map = new Map<string, { month: string; revenue: number; pending: number }>();
@@ -39,8 +56,10 @@ function buildMonthlyData(invoices: Array<{ issueDate: string; total: number; st
 export default function RapportsPage() {
   const { data: stats, isLoading: statsLoading } = useDashboard();
   const { data: invoicesData, isLoading: invLoading } = useInvoices({ pageSize: 200 });
+  const { data: plData, isLoading: plLoading } = useMonthlyPL(6);
 
   const monthlyData = buildMonthlyData(invoicesData?.data ?? []);
+  const plMonthly = plData?.data ?? [];
 
   async function handleExport() {
     const ExcelJS = (await import("exceljs")).default;
@@ -78,6 +97,8 @@ export default function RapportsPage() {
     return <div className="space-y-4"><SkeletonCard /><SkeletonCard /></div>;
   }
 
+  const netProfit = stats?.netProfit ?? 0;
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -92,16 +113,21 @@ export default function RapportsPage() {
         </Button>
       </div>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* KPI Cards */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
-          { label: "CA du mois", value: formatCurrency(stats?.monthlyRevenue ?? 0), color: "text-green-600" },
-          { label: "Factures en attente", value: String(stats?.pendingInvoices ?? 0), color: "text-blue-600" },
-          { label: "Factures en retard", value: String(stats?.overdueInvoices ?? 0), color: "text-red-600" },
-          { label: "Alertes stock", value: String(stats?.lowStockProducts ?? 0), color: "text-orange-600" },
+          { label: "CA du mois", value: formatCurrency(stats?.monthlyRevenue ?? 0), color: "text-green-600", Icon: TrendingUp },
+          { label: "Dépenses du mois", value: formatCurrency(stats?.monthlyExpenses ?? 0), color: "text-red-600", Icon: TrendingDown },
+          { label: "Résultat net", value: formatCurrency(netProfit), color: netProfit >= 0 ? "text-green-700 font-bold" : "text-red-700 font-bold", Icon: Scale },
+          { label: "Factures en attente", value: String(stats?.pendingInvoices ?? 0), color: "text-blue-600", Icon: null },
+          { label: "Factures en retard", value: String(stats?.overdueInvoices ?? 0), color: "text-red-600", Icon: null },
         ].map((item) => (
           <Card key={item.label}>
             <CardHeader>
-              <CardTitle className="text-sm font-medium text-gray-500">{item.label}</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-gray-500">{item.label}</CardTitle>
+                {item.Icon && <item.Icon className={`h-4 w-4 ${item.color}`} aria-hidden="true" />}
+              </div>
             </CardHeader>
             <CardContent>
               <p className={`text-2xl font-bold ${item.color}`}>{item.value}</p>
@@ -109,6 +135,30 @@ export default function RapportsPage() {
           </Card>
         ))}
       </div>
+
+      {/* P&L Chart */}
+      {!plLoading && plMonthly.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Compte de résultat mensuel (Revenus vs Dépenses vs Résultat net)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={plMonthly} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                <Legend />
+                <ReferenceLine y={0} stroke="#9ca3af" strokeDasharray="3 3" />
+                <Line type="monotone" dataKey="revenue" name="Revenus" stroke="#16a34a" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="expenses" name="Dépenses" stroke="#dc2626" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="net" name="Résultat net" stroke="#2563eb" strokeWidth={2.5} dot={{ r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
