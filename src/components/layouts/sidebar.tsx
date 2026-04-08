@@ -14,6 +14,7 @@ import {
   BarChart3,
   Settings,
   X,
+  TrendingDown,
 } from "lucide-react";
 
 const navigation = [
@@ -23,6 +24,7 @@ const navigation = [
   { name: "Clients", href: "/clients", icon: Users },
   { name: "Produits", href: "/produits", icon: Package },
   { name: "Paiements", href: "/paiements", icon: CreditCard },
+  { name: "Dépenses", href: "/depenses", icon: TrendingDown },
   { name: "Rapports", href: "/rapports", icon: BarChart3 },
   { name: "Paramètres", href: "/parametres", icon: Settings },
 ];

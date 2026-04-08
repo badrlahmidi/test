@@ -3,6 +3,7 @@
 import { useUiStore } from "@/stores/ui-store";
 import { useTheme } from "@/components/providers/theme-provider";
 import { useNotifications, useMarkNotificationsRead } from "@/lib/hooks/use-notifications";
+import { GlobalSearch } from "@/components/layouts/global-search";
 import { Menu, Bell, LogOut, Sun, Moon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
@@ -46,7 +47,9 @@ export function Header() {
         <Menu className="h-5 w-5" />
       </button>
 
-      <div className="flex-1" />
+      <div className="flex-1 px-4">
+        <GlobalSearch />
+      </div>
 
       <div className="flex items-center gap-2">
         <button

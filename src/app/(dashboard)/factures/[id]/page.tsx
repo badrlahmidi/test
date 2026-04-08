@@ -22,7 +22,7 @@ import {
 } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useToastStore } from "@/stores/toast-store";
-import { ArrowLeft, Copy, Trash2, Send, CreditCard, Printer } from "lucide-react";
+import { ArrowLeft, Copy, Trash2, Send, CreditCard, Printer, Mail } from "lucide-react";
 import type { PaymentFormData } from "@/lib/validations/payment";
 
 const statusVariant: Record<string, "default" | "primary" | "success" | "warning" | "danger"> = {
@@ -46,12 +46,30 @@ export default function FactureDetailPage() {
 
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const { data: invoice, isLoading } = useInvoice(id);
   const updateInvoice = useUpdateInvoice();
   const duplicateInvoice = useDuplicateInvoice();
   const deleteInvoice = useDeleteInvoice();
   const createPayment = useCreatePayment();
+
+  async function handleSendEmail() {
+    setSendingEmail(true);
+    try {
+      const res = await fetch(`/api/v1/factures/${id}/send`, { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) {
+        addToast({ variant: "error", title: json.message ?? "Erreur envoi email" });
+      } else {
+        addToast({ variant: "success", title: "Facture envoyée par email" });
+      }
+    } catch {
+      addToast({ variant: "error", title: "Erreur envoi email" });
+    } finally {
+      setSendingEmail(false);
+    }
+  }
 
   async function handleMarkSent() {
     try {
@@ -114,6 +132,15 @@ export default function FactureDetailPage() {
           {statusLabel[invoice.status] ?? invoice.status}
         </Badge>
         <div className="ml-auto flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<Mail className="h-4 w-4" />}
+            onClick={handleSendEmail}
+            isLoading={sendingEmail}
+          >
+            Envoyer par email
+          </Button>
           {invoice.status === "DRAFT" && (
             <Button
               variant="secondary"
