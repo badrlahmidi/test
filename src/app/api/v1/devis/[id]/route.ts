@@ -10,6 +10,7 @@ import {
   serverError,
   notFound,
 } from "@/lib/api-utils";
+import { writeAudit } from "@/lib/audit";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -85,6 +86,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       },
     });
 
+    await writeAudit({ tenantId: session.user.tenantId, userId: session.user.id, entityType: "Quote", entityId: quote.id, action: "UPDATE", before: existing, after: quote });
+
     return NextResponse.json(quote);
   } catch (error) {
     return serverError(error);
@@ -103,6 +106,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     if (!existing) return notFound("Devis");
 
     await prisma.quote.delete({ where: { id } });
+    await writeAudit({ tenantId: session.user.tenantId, userId: session.user.id, entityType: "Quote", entityId: id, action: "DELETE", before: existing });
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return serverError(error);

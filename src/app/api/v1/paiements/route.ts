@@ -9,11 +9,17 @@ import {
   serverError,
   notFound,
 } from "@/lib/api-utils";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { writeAudit } from "@/lib/audit";
+import { createNotification } from "@/lib/notifications";
 
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) return unauthorized();
+
+    const rateLimitRes = await checkRateLimit(session.user.tenantId);
+    if (rateLimitRes) return rateLimitRes;
 
     const { searchParams } = req.nextUrl;
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
@@ -50,6 +56,9 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) return unauthorized();
+
+    const rateLimitRes = await checkRateLimit(session.user.tenantId);
+    if (rateLimitRes) return rateLimitRes;
 
     const body = await req.json();
     const parsed = parseBody(paymentSchema, body);
@@ -90,6 +99,9 @@ export async function POST(req: NextRequest) {
       where: { id: invoice.id },
       data: { status: newStatus },
     });
+
+    await writeAudit({ tenantId: session.user.tenantId, userId: session.user.id, entityType: "Payment", entityId: payment.id, action: "CREATE", after: payment });
+    await createNotification({ tenantId: session.user.tenantId, userId: session.user.id, type: "PAYMENT_RECEIVED", title: "Paiement reçu", body: `Paiement de ${payment.amount} MAD reçu pour la facture ${invoice.number}` });
 
     return NextResponse.json(payment, { status: 201 });
   } catch (error) {

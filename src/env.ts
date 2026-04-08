@@ -37,6 +37,9 @@ const envSchema = z.object({
   // Cron jobs
   CRON_SECRET: z.string().optional(),
 
+  // File storage (Vercel Blob)
+  BLOB_READ_WRITE_TOKEN: z.string().optional(),
+
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),

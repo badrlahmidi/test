@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { ZodError, type ZodSchema } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 export type AuthSession = {
   user: {
@@ -52,6 +53,7 @@ export function parseBody<T>(schema: ZodSchema<T>, data: unknown): { success: tr
 }
 
 export function serverError(error: unknown) {
+  Sentry.captureException(error);
   console.error("API Error:", error);
   return NextResponse.json(
     { message: "Erreur interne du serveur" },

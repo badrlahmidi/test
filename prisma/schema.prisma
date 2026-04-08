@@ -154,6 +154,8 @@ model Invoice {
   tvaAmount Decimal
   total    Decimal
   notes    String?
+  recurringInterval RecurringInterval @default(NONE)
+  nextInvoiceDate   DateTime?
 
   items    InvoiceItem[]
   payments Payment[]
@@ -273,6 +275,13 @@ enum NotificationType {
   LOW_STOCK
   QUOTE_ACCEPTED
   SYSTEM
+}
+
+enum RecurringInterval {
+  NONE
+  MONTHLY
+  QUARTERLY
+  YEARLY
 }
 
 model Notification {

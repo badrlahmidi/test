@@ -6,6 +6,7 @@ import {
   serverError,
   notFound,
 } from "@/lib/api-utils";
+import { writeAudit } from "@/lib/audit";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -41,6 +42,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     if (!existing) return notFound("Paiement");
 
     await prisma.payment.delete({ where: { id } });
+    await writeAudit({ tenantId: session.user.tenantId, userId: session.user.id, entityType: "Payment", entityId: id, action: "DELETE", before: existing });
 
     // Recalculate invoice status
     const totalPaid = await prisma.payment.aggregate({

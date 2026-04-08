@@ -10,11 +10,16 @@ import {
   parseBody,
   serverError,
 } from "@/lib/api-utils";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { writeAudit } from "@/lib/audit";
 
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) return unauthorized();
+
+    const rateLimitRes = await checkRateLimit(session.user.tenantId);
+    if (rateLimitRes) return rateLimitRes;
 
     const { searchParams } = req.nextUrl;
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
@@ -49,6 +54,9 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) return unauthorized();
+
+    const rateLimitRes = await checkRateLimit(session.user.tenantId);
+    if (rateLimitRes) return rateLimitRes;
 
     const body = await req.json();
     const parsed = parseBody(quoteSchema, body);
@@ -92,6 +100,8 @@ export async function POST(req: NextRequest) {
         client: { select: { id: true, name: true } },
       },
     });
+
+    await writeAudit({ tenantId: session.user.tenantId, userId: session.user.id, entityType: "Quote", entityId: quote.id, action: "CREATE", after: quote });
 
     return NextResponse.json(quote, { status: 201 });
   } catch (error) {
