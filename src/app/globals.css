@@ -70,19 +70,18 @@
     @apply top-4;
   }
 
-  /* Ensure minimum 44×44px touch targets */
-  button,
+  /* Ensure minimum 44×44px touch targets for interactive elements that need it */
+  button:not([data-icon]),
   [role="button"],
-  a {
+  input[type="submit"],
+  input[type="button"] {
     min-height: 44px;
-    min-width: 44px;
   }
 
-  /* Remove touch target override for purely inline elements */
-  span[role="button"],
-  p a {
-    min-height: unset;
-    min-width: unset;
+  /* Skip-nav link focus styling */
+  #main-content:focus {
+    outline: 2px solid rgb(var(--color-primary));
+    outline-offset: -2px;
   }
 }
 
