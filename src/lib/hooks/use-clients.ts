@@ -99,7 +99,33 @@ export function useCreateClient() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createClient,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["clients"] }),
+    onMutate: async (newClient) => {
+      await qc.cancelQueries({ queryKey: ["clients"] });
+      const previous = qc.getQueriesData<ClientsResponse>({ queryKey: ["clients"] });
+      qc.setQueriesData<ClientsResponse>({ queryKey: ["clients"] }, (old) => {
+        if (!old) return old;
+        const optimistic: Client = {
+          id: `temp-${Date.now()}`,
+          ...newClient,
+          email: newClient.email ?? null,
+          phone: newClient.phone ?? null,
+          ice: newClient.ice ?? null,
+          address: newClient.address ?? null,
+          city: newClient.city ?? null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        return { ...old, data: [optimistic, ...old.data], total: old.total + 1 };
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      context?.previous?.forEach(([key, value]) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        qc.setQueryData(key, value as any);
+      });
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["clients"] }),
   });
 }
 
@@ -108,7 +134,18 @@ export function useUpdateClient() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Client> }) =>
       updateClient(id, data),
-    onSuccess: (_data, { id }) => {
+    onMutate: async ({ id, data }) => {
+      await qc.cancelQueries({ queryKey: ["clients", id] });
+      const previous = qc.getQueryData<Client>(["clients", id]);
+      qc.setQueryData<Client>(["clients", id], (old) =>
+        old ? { ...old, ...data } : old,
+      );
+      return { previous };
+    },
+    onError: (_err, { id }, context) => {
+      if (context?.previous) qc.setQueryData(["clients", id], context.previous);
+    },
+    onSettled: (_data, _err, { id }) => {
       qc.invalidateQueries({ queryKey: ["clients"] });
       qc.invalidateQueries({ queryKey: ["clients", id] });
     },
@@ -119,6 +156,25 @@ export function useDeleteClient() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: deleteClient,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["clients"] }),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ["clients"] });
+      const previous = qc.getQueriesData<ClientsResponse>({ queryKey: ["clients"] });
+      qc.setQueriesData<ClientsResponse>({ queryKey: ["clients"] }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: old.data.filter((c) => c.id !== id),
+          total: Math.max(0, old.total - 1),
+        };
+      });
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      context?.previous?.forEach(([key, value]) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        qc.setQueryData(key, value as any);
+      });
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["clients"] }),
   });
 }

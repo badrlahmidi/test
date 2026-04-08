@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { invoiceSchema } from "@/lib/validations/invoice";
 import { calculateLineTotal, calculateTva, calculateTotal } from "@/lib/utils/tva";
+import { writeAudit } from "@/lib/audit";
 import {
   getSession,
   unauthorized,
@@ -88,6 +89,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       },
     });
 
+    await writeAudit({
+      tenantId: session.user.tenantId,
+      userId: session.user.id,
+      entityType: "Invoice",
+      entityId: id,
+      action: "UPDATE",
+      before: { status: existing.status, total: existing.total },
+      after: { status: invoice.status, total: invoice.total },
+    });
+
     return NextResponse.json(invoice);
   } catch (error) {
     return serverError(error);
@@ -106,6 +117,16 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     if (!existing) return notFound("Facture");
 
     await prisma.invoice.delete({ where: { id } });
+
+    await writeAudit({
+      tenantId: session.user.tenantId,
+      userId: session.user.id,
+      entityType: "Invoice",
+      entityId: id,
+      action: "DELETE",
+      before: { number: existing.number, total: existing.total, status: existing.status },
+    });
+
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return serverError(error);

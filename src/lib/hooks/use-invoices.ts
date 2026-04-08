@@ -135,7 +135,22 @@ export function useUpdateInvoice() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<InvoiceInput> & { status?: InvoiceStatus } }) =>
       updateInvoice(id, data),
-    onSuccess: (_data, { id }) => {
+    onMutate: async ({ id, data }) => {
+      await qc.cancelQueries({ queryKey: ["invoices", id] });
+      const previous = qc.getQueryData<Invoice>(["invoices", id]);
+      // Only spread known Invoice-compatible fields to satisfy the type checker
+      qc.setQueryData<Invoice>(["invoices", id], (old) => {
+        if (!old) return old;
+        const { items: _items, ...safeData } = data as Record<string, unknown>;
+        void _items;
+        return { ...old, ...safeData } as Invoice;
+      });
+      return { previous };
+    },
+    onError: (_err, { id }, context) => {
+      if (context?.previous) qc.setQueryData(["invoices", id], context.previous);
+    },
+    onSettled: (_data, _err, { id }) => {
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["invoices", id] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
@@ -147,7 +162,26 @@ export function useDeleteInvoice() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: deleteInvoice,
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ["invoices"] });
+      const previous = qc.getQueriesData<InvoicesResponse>({ queryKey: ["invoices"] });
+      qc.setQueriesData<InvoicesResponse>({ queryKey: ["invoices"] }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: old.data.filter((inv) => inv.id !== id),
+          total: Math.max(0, old.total - 1),
+        };
+      });
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      context?.previous?.forEach(([key, value]) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        qc.setQueryData(key, value as any);
+      });
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },

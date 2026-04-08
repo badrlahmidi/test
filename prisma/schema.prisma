@@ -242,3 +242,50 @@ model Payment {
   @@index([invoiceId])
   @@map("payments")
 }
+
+// ---------------------------------------------------------------------------
+// Audit log — immutable record of every mutation on business entities.
+// Required for Moroccan fiscal compliance (DGI audit trail).
+// ---------------------------------------------------------------------------
+model AuditLog {
+  id         String   @id @default(cuid())
+  tenantId   String
+  userId     String
+  entityType String   // e.g. "Invoice", "Client", "Product"
+  entityId   String
+  action     String   // "CREATE" | "UPDATE" | "DELETE"
+  before     Json?    // previous state snapshot
+  after      Json?    // new state snapshot
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// In-app notifications
+// ---------------------------------------------------------------------------
+enum NotificationType {
+  INVOICE_OVERDUE
+  PAYMENT_RECEIVED
+  LOW_STOCK
+  QUOTE_ACCEPTED
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  tenantId  String
+  userId    String
+  type      NotificationType @default(SYSTEM)
+  title     String
+  body      String
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([tenantId, userId, read])
+  @@map("notifications")
+}

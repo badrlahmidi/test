@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { clientSchema } from "@/lib/validations/client";
+import { writeAudit } from "@/lib/audit";
 import {
   getSession,
   unauthorized,
@@ -59,6 +60,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       data: parsed.data,
     });
 
+    await writeAudit({
+      tenantId: session.user.tenantId,
+      userId: session.user.id,
+      entityType: "Client",
+      entityId: id,
+      action: "UPDATE",
+      before: existing,
+      after: client,
+    });
+
     return NextResponse.json(client);
   } catch (error) {
     return serverError(error);
@@ -77,6 +88,16 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     if (!existing) return notFound("Client");
 
     await prisma.client.delete({ where: { id } });
+
+    await writeAudit({
+      tenantId: session.user.tenantId,
+      userId: session.user.id,
+      entityType: "Client",
+      entityId: id,
+      action: "DELETE",
+      before: existing,
+    });
+
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return serverError(error);
