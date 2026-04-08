@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-
-const CMI_WEBHOOK_SECRET = process.env.CMI_WEBHOOK_SECRET ?? "";
+import { env } from "@/env";
 
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
   const receivedSig = req.headers.get("x-cmi-signature") ?? "";
 
-  if (!receivedSig || !CMI_WEBHOOK_SECRET) {
+  const secret = env.CMI_WEBHOOK_SECRET;
+  if (!secret) {
+    return NextResponse.json({ message: "Webhook non configuré" }, { status: 503 });
+  }
+
+  if (!receivedSig) {
     return NextResponse.json({ message: "Signature manquante" }, { status: 400 });
   }
 
   const expectedSig = crypto
-    .createHmac("sha256", CMI_WEBHOOK_SECRET)
+    .createHmac("sha256", secret)
     .update(rawBody)
     .digest("hex");
 

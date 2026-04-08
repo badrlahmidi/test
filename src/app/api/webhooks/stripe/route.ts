@@ -1,23 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
+import { env } from "@/env";
 
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
   const signature = req.headers.get("stripe-signature") ?? "";
+
+  const secret = env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) {
+    return NextResponse.json({ message: "Webhook non configuré" }, { status: 503 });
+  }
 
   // HMAC signature verification
   const elements = signature.split(",");
   const timestamp = elements.find((e) => e.startsWith("t="))?.slice(2);
   const receivedSig = elements.find((e) => e.startsWith("v1="))?.slice(3);
 
-  if (!timestamp || !receivedSig || !STRIPE_WEBHOOK_SECRET) {
+  if (!timestamp || !receivedSig) {
     return NextResponse.json({ message: "Signature manquante" }, { status: 400 });
   }
 
   const expectedSig = crypto
-    .createHmac("sha256", STRIPE_WEBHOOK_SECRET)
+    .createHmac("sha256", secret)
     .update(`${timestamp}.${rawBody}`)
     .digest("hex");
 
