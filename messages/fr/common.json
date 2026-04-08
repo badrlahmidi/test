@@ -1,0 +1,132 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "new": "Nouveau",
+    "back": "Retour",
+    "search": "Rechercher",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "confirm": "Confirmer",
+    "close": "Fermer"
+  },
+  "nav": {
+    "overview": "Tableau de bord",
+    "clients": "Clients",
+    "products": "Produits",
+    "invoices": "Factures",
+    "quotes": "Devis",
+    "payments": "Paiements",
+    "reports": "Rapports",
+    "settings": "Paramètres"
+  },
+  "clients": {
+    "title": "Clients",
+    "newClient": "Nouveau client",
+    "name": "Nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "ice": "ICE",
+    "address": "Adresse",
+    "city": "Ville",
+    "type": "Type",
+    "company": "Entreprise",
+    "individual": "Particulier",
+    "invoiceHistory": "Historique des factures"
+  },
+  "products": {
+    "title": "Produits",
+    "newProduct": "Nouveau produit",
+    "name": "Nom du produit",
+    "description": "Description",
+    "unitPrice": "Prix unitaire",
+    "tvaRate": "Taux TVA",
+    "unit": "Unité",
+    "sku": "SKU / Référence",
+    "stockQty": "Stock disponible",
+    "minStockAlert": "Alerte stock minimum",
+    "category": "Catégorie",
+    "lowStock": "Stock faible"
+  },
+  "invoices": {
+    "title": "Factures",
+    "newInvoice": "Nouvelle facture",
+    "number": "N°",
+    "client": "Client",
+    "issueDate": "Date d'émission",
+    "dueDate": "Date d'échéance",
+    "status": {
+      "DRAFT": "Brouillon",
+      "SENT": "Envoyée",
+      "PAID": "Payée",
+      "PARTIALLY_PAID": "Partielle",
+      "OVERDUE": "En retard",
+      "CANCELLED": "Annulée"
+    },
+    "subtotal": "Sous-total HT",
+    "tva": "TVA",
+    "total": "Total TTC",
+    "lines": "Lignes",
+    "addLine": "Ajouter une ligne",
+    "description": "Description",
+    "quantity": "Quantité",
+    "unitPrice": "Prix unitaire",
+    "markSent": "Marquer envoyée",
+    "markPaid": "Marquer payée",
+    "duplicate": "Dupliquer",
+    "pdf": "Télécharger PDF"
+  },
+  "quotes": {
+    "title": "Devis",
+    "newQuote": "Nouveau devis",
+    "validUntil": "Valide jusqu'au",
+    "status": {
+      "DRAFT": "Brouillon",
+      "SENT": "Envoyé",
+      "ACCEPTED": "Accepté",
+      "REJECTED": "Refusé",
+      "EXPIRED": "Expiré",
+      "CONVERTED": "Converti"
+    },
+    "convertToInvoice": "Convertir en facture"
+  },
+  "payments": {
+    "title": "Paiements",
+    "newPayment": "Nouveau paiement",
+    "amount": "Montant",
+    "method": {
+      "CASH": "Espèces",
+      "CHECK": "Chèque",
+      "TRANSFER": "Virement",
+      "CARD": "Carte",
+      "MOBILE_MONEY": "Mobile Money",
+      "OTHER": "Autre"
+    },
+    "reference": "Référence",
+    "paidAt": "Date de paiement",
+    "invoice": "Facture"
+  },
+  "reports": {
+    "title": "Rapports",
+    "monthlyRevenue": "CA du mois",
+    "pendingInvoices": "Factures en attente",
+    "overdueInvoices": "Factures en retard",
+    "stockAlerts": "Alertes stock",
+    "exportExcel": "Exporter Excel"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "companyInfo": "Informations légales",
+    "companyName": "Nom de l'entreprise",
+    "ice": "ICE",
+    "ifNumber": "IF",
+    "rc": "RC",
+    "cnss": "CNSS",
+    "contact": "Coordonnées",
+    "billingSettings": "Paramètres de facturation",
+    "defaultTva": "Taux TVA par défaut",
+    "currency": "Devise"
+  }
+}

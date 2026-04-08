@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "ERP Maroc",
+    "tagline": "Gestion simplifiée pour TPE/PME"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "invoices": "Factures",
+    "quotes": "Devis",
+    "clients": "Clients",
+    "products": "Produits",
+    "payments": "Paiements",
+    "reports": "Rapports",
+    "settings": "Paramètres"
+  },
+  "actions": {
+    "create": "Créer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "search": "Rechercher",
+    "export": "Exporter",
+    "import": "Importer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent"
+  },
+  "status": {
+    "loading": "Chargement...",
+    "noData": "Aucune donnée",
+    "error": "Une erreur est survenue",
+    "success": "Opération réussie"
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "Inscription",
+    "logout": "Déconnexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?"
+  }
+}

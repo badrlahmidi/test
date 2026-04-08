@@ -1,0 +1,28 @@
+{
+  "title": "Factures",
+  "new": "Nouvelle facture",
+  "number": "Numéro",
+  "client": "Client",
+  "issueDate": "Date d'émission",
+  "dueDate": "Date d'échéance",
+  "subtotal": "Sous-total HT",
+  "tva": "TVA",
+  "total": "Total TTC",
+  "status": {
+    "DRAFT": "Brouillon",
+    "SENT": "Envoyée",
+    "PAID": "Payée",
+    "PARTIALLY_PAID": "Partiellement payée",
+    "OVERDUE": "En retard",
+    "CANCELLED": "Annulée"
+  },
+  "items": {
+    "title": "Lignes",
+    "description": "Description",
+    "quantity": "Quantité",
+    "unitPrice": "Prix unitaire",
+    "tvaRate": "Taux TVA",
+    "lineTotal": "Total ligne",
+    "add": "Ajouter une ligne"
+  }
+}

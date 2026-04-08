@@ -1,0 +1,132 @@
+{
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "new": "جديد",
+    "back": "رجوع",
+    "search": "بحث",
+    "loading": "جار التحميل...",
+    "error": "حدث خطأ",
+    "confirm": "تأكيد",
+    "close": "إغلاق"
+  },
+  "nav": {
+    "overview": "لوحة التحكم",
+    "clients": "العملاء",
+    "products": "المنتجات",
+    "invoices": "الفواتير",
+    "quotes": "عروض الأسعار",
+    "payments": "المدفوعات",
+    "reports": "التقارير",
+    "settings": "الإعدادات"
+  },
+  "clients": {
+    "title": "العملاء",
+    "newClient": "عميل جديد",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "ice": "ICE",
+    "address": "العنوان",
+    "city": "المدينة",
+    "type": "النوع",
+    "company": "شركة",
+    "individual": "فرد",
+    "invoiceHistory": "سجل الفواتير"
+  },
+  "products": {
+    "title": "المنتجات",
+    "newProduct": "منتج جديد",
+    "name": "اسم المنتج",
+    "description": "الوصف",
+    "unitPrice": "سعر الوحدة",
+    "tvaRate": "نسبة الضريبة",
+    "unit": "الوحدة",
+    "sku": "الرمز / المرجع",
+    "stockQty": "الكمية المتاحة",
+    "minStockAlert": "تنبيه المخزون الأدنى",
+    "category": "الفئة",
+    "lowStock": "مخزون منخفض"
+  },
+  "invoices": {
+    "title": "الفواتير",
+    "newInvoice": "فاتورة جديدة",
+    "number": "رقم",
+    "client": "العميل",
+    "issueDate": "تاريخ الإصدار",
+    "dueDate": "تاريخ الاستحقاق",
+    "status": {
+      "DRAFT": "مسودة",
+      "SENT": "مُرسلة",
+      "PAID": "مدفوعة",
+      "PARTIALLY_PAID": "مدفوعة جزئياً",
+      "OVERDUE": "متأخرة",
+      "CANCELLED": "ملغاة"
+    },
+    "subtotal": "المجموع قبل الضريبة",
+    "tva": "الضريبة",
+    "total": "الإجمالي شامل الضريبة",
+    "lines": "البنود",
+    "addLine": "إضافة بند",
+    "description": "الوصف",
+    "quantity": "الكمية",
+    "unitPrice": "سعر الوحدة",
+    "markSent": "تحديد كمُرسلة",
+    "markPaid": "تحديد كمدفوعة",
+    "duplicate": "تكرار",
+    "pdf": "تنزيل PDF"
+  },
+  "quotes": {
+    "title": "عروض الأسعار",
+    "newQuote": "عرض سعر جديد",
+    "validUntil": "صالح حتى",
+    "status": {
+      "DRAFT": "مسودة",
+      "SENT": "مُرسل",
+      "ACCEPTED": "مقبول",
+      "REJECTED": "مرفوض",
+      "EXPIRED": "منتهي الصلاحية",
+      "CONVERTED": "محوَّل"
+    },
+    "convertToInvoice": "تحويل إلى فاتورة"
+  },
+  "payments": {
+    "title": "المدفوعات",
+    "newPayment": "دفعة جديدة",
+    "amount": "المبلغ",
+    "method": {
+      "CASH": "نقداً",
+      "CHECK": "شيك",
+      "TRANSFER": "تحويل بنكي",
+      "CARD": "بطاقة",
+      "MOBILE_MONEY": "موبايل موني",
+      "OTHER": "أخرى"
+    },
+    "reference": "مرجع",
+    "paidAt": "تاريخ الدفع",
+    "invoice": "الفاتورة"
+  },
+  "reports": {
+    "title": "التقارير",
+    "monthlyRevenue": "رقم الأعمال الشهري",
+    "pendingInvoices": "الفواتير المعلقة",
+    "overdueInvoices": "الفواتير المتأخرة",
+    "stockAlerts": "تنبيهات المخزون",
+    "exportExcel": "تصدير Excel"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "companyInfo": "المعلومات القانونية",
+    "companyName": "اسم الشركة",
+    "ice": "ICE",
+    "ifNumber": "IF",
+    "rc": "RC",
+    "cnss": "CNSS",
+    "contact": "معلومات الاتصال",
+    "billingSettings": "إعدادات الفوترة",
+    "defaultTva": "نسبة الضريبة الافتراضية",
+    "currency": "العملة"
+  }
+}
