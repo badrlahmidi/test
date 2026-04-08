@@ -4,11 +4,85 @@
 
 @layer base {
   :root {
+    /* Primary */
     --color-primary: 37 99 235;
     --color-primary-dark: 29 78 216;
+    --color-primary-light: 219 234 254;
+
+    /* Surfaces */
+    --color-surface: 255 255 255;
+    --color-surface-elevated: 249 250 251;
+    --color-border: 229 231 235;
+
+    /* Text */
+    --color-text: 17 24 39;
+    --color-text-muted: 107 114 128;
+
+    /* Status */
+    --color-success: 22 163 74;
+    --color-warning: 217 119 6;
+    --color-danger: 220 38 38;
+
+    /* Radius */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+
+    /* Shadow */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  .dark {
+    --color-primary: 96 165 250;
+    --color-primary-dark: 59 130 246;
+    --color-primary-light: 30 58 138;
+
+    --color-surface: 17 24 39;
+    --color-surface-elevated: 31 41 55;
+    --color-border: 55 65 81;
+
+    --color-text: 249 250 251;
+    --color-text-muted: 156 163 175;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
     @apply bg-gray-50 text-gray-900 antialiased;
+    background-color: rgb(var(--color-surface-elevated));
+    color: rgb(var(--color-text));
+  }
+
+  /* Skip navigation link for accessibility */
+  .skip-nav {
+    @apply absolute -top-full left-4 z-50 bg-white px-4 py-2 text-blue-700 underline;
+  }
+  .skip-nav:focus {
+    @apply top-4;
+  }
+
+  /* Ensure minimum 44×44px touch targets */
+  button,
+  [role="button"],
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove touch target override for purely inline elements */
+  span[role="button"],
+  p a {
+    min-height: unset;
+    min-width: unset;
   }
 }
+

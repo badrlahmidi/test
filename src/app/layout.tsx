@@ -16,8 +16,12 @@ export default function RootLayout({
   return (
     <html lang="fr" dir="ltr">
       <body className="font-sans antialiased">
+        <a href="#main-content" className="skip-nav">
+          Aller au contenu principal
+        </a>
         <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
+

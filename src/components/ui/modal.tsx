@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
 export interface ModalProps {
-  open: boolean;
+  open?: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   title: string;
   description?: string;
@@ -22,17 +23,19 @@ const sizeClasses = {
 
 export function Modal({
   open,
+  isOpen,
   onClose,
   title,
   description,
   size = "md",
   children,
 }: ModalProps) {
+  const visible = open ?? isOpen ?? false;
   const titleId = React.useId();
   const descId = React.useId();
 
   React.useEffect(() => {
-    if (!open) return;
+    if (!visible) return;
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -45,9 +48,9 @@ export function Modal({
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [visible, onClose]);
 
-  if (!open) return null;
+  if (!visible) return null;
 
   return (
     <div

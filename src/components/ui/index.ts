@@ -6,3 +6,4 @@ export { Badge, type BadgeProps } from "./badge";
 export { Card, CardHeader, CardTitle, CardDescription, CardContent } from "./card";
 export { ToastContainer } from "./toast";
 export { DataTable } from "./data-table";
+export { Skeleton, SkeletonText, SkeletonCard, SkeletonTable } from "./skeleton";

@@ -1,62 +1,165 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { BarChart3, TrendingUp, FileSpreadsheet } from "lucide-react";
+import { useDashboard } from "@/lib/hooks/use-dashboard";
+import { useInvoices } from "@/lib/hooks/use-invoices";
+import { Card, CardContent, CardHeader, CardTitle, Button, SkeletonCard } from "@/components/ui";
+import { formatCurrency } from "@/lib/utils";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Legend,
+} from "recharts";
+import { Download } from "lucide-react";
+
+function buildMonthlyData(invoices: Array<{ issueDate: string; total: number; status: string }>) {
+  const map = new Map<string, { month: string; revenue: number; pending: number }>();
+  for (const inv of invoices) {
+    const d = new Date(inv.issueDate);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleDateString("fr-MA", { month: "short", year: "2-digit" });
+    if (!map.has(key)) map.set(key, { month: label, revenue: 0, pending: 0 });
+    const entry = map.get(key)!;
+    if (inv.status === "PAID") entry.revenue += Number(inv.total);
+    else if (["SENT", "PARTIALLY_PAID", "OVERDUE"].includes(inv.status))
+      entry.pending += Number(inv.total);
+  }
+  return Array.from(map.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12)
+    .map(([, v]) => v);
+}
 
 export default function RapportsPage() {
+  const { data: stats, isLoading: statsLoading } = useDashboard();
+  const { data: invoicesData, isLoading: invLoading } = useInvoices({ pageSize: 200 });
+
+  const monthlyData = buildMonthlyData(invoicesData?.data ?? []);
+
+  async function handleExport() {
+    const ExcelJS = (await import("exceljs")).default;
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Factures");
+    ws.columns = [
+      { header: "N°", key: "number", width: 16 },
+      { header: "Client", key: "client", width: 30 },
+      { header: "Date", key: "date", width: 14 },
+      { header: "Échéance", key: "due", width: 14 },
+      { header: "Statut", key: "status", width: 14 },
+      { header: "Total TTC", key: "total", width: 14 },
+    ];
+    for (const inv of invoicesData?.data ?? []) {
+      ws.addRow({
+        number: inv.number,
+        client: inv.client?.name,
+        date: new Date(inv.issueDate).toLocaleDateString("fr-MA"),
+        due: new Date(inv.dueDate).toLocaleDateString("fr-MA"),
+        status: inv.status,
+        total: Number(inv.total),
+      });
+    }
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `factures-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  if (statsLoading || invLoading) {
+    return <div className="space-y-4"><SkeletonCard /><SkeletonCard /></div>;
+  }
+
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Rapports</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900">Rapports</h1>
+        <Button
+          variant="secondary"
+          size="sm"
+          leftIcon={<Download className="h-4 w-4" />}
+          onClick={handleExport}
+        >
+          Exporter Excel
+        </Button>
+      </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: "CA du mois", value: formatCurrency(stats?.monthlyRevenue ?? 0), color: "text-green-600" },
+          { label: "Factures en attente", value: String(stats?.pendingInvoices ?? 0), color: "text-blue-600" },
+          { label: "Factures en retard", value: String(stats?.overdueInvoices ?? 0), color: "text-red-600" },
+          { label: "Alertes stock", value: String(stats?.lowStockProducts ?? 0), color: "text-orange-600" },
+        ].map((item) => (
+          <Card key={item.label}>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-gray-500">{item.label}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className={`text-2xl font-bold ${item.color}`}>{item.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
           <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-blue-100 p-2">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-              </div>
-              <CardTitle>Chiffre d&apos;affaires</CardTitle>
-            </div>
+            <CardTitle>Chiffre d&apos;affaires mensuel</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-500">
-              Analyse du CA mensuel et annuel avec graphiques et tendances.
-            </p>
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={monthlyData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#2563eb"
+                  fill="url(#colorRevenue)"
+                  name="CA encaissé"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow">
+        <Card>
           <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-green-100 p-2">
-                <BarChart3 className="h-5 w-5 text-green-600" />
-              </div>
-              <CardTitle>Balance clients</CardTitle>
-            </div>
+            <CardTitle>CA vs En attente</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-500">
-              Vue des créances clients et soldes en attente.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-purple-100 p-2">
-                <FileSpreadsheet className="h-5 w-5 text-purple-600" />
-              </div>
-              <CardTitle>État de stock</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Inventaire actuel, alertes stock bas, mouvements.
-            </p>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={monthlyData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                <Legend />
+                <Bar dataKey="revenue" name="Encaissé" fill="#16a34a" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="pending" name="En attente" fill="#f59e0b" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
     </div>
   );
 }
+

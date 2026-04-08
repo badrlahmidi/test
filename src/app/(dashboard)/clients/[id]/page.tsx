@@ -1,112 +1,131 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter, useParams } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Input, Select, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { clientSchema, type ClientFormData } from "@/lib/validations/client";
+import { useParams, useRouter } from "next/navigation";
+import { useClient, useCreateClient, useUpdateClient } from "@/lib/hooks/use-clients";
+import { ClientForm } from "@/components/forms/client-form";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Badge,
+  SkeletonCard,
+} from "@/components/ui";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { useToastStore } from "@/stores/toast-store";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
+import type { ClientFormData } from "@/lib/validations/client";
+
+const statusVariant: Record<string, "default" | "primary" | "success" | "warning" | "danger"> = {
+  DRAFT: "default",
+  SENT: "primary",
+  PAID: "success",
+  PARTIALLY_PAID: "warning",
+  OVERDUE: "danger",
+  CANCELLED: "default",
+};
+const statusLabel: Record<string, string> = {
+  DRAFT: "Brouillon", SENT: "Envoyée", PAID: "Payée",
+  PARTIALLY_PAID: "Partielle", OVERDUE: "En retard", CANCELLED: "Annulée",
+};
 
 export default function ClientDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const addToast = useToastStore((s) => s.addToast);
-  const isNew = params.id === "nouveau";
+  const id = params.id as string;
+  const isNew = id === "nouveau";
 
-  const { data: client, isLoading } = useQuery({
-    queryKey: ["client", params.id],
-    queryFn: async () => {
-      const res = await fetch(`/api/v1/clients?search=`);
-      const json = await res.json();
-      return json.data?.find((c: { id: string }) => c.id === params.id) ?? null;
-    },
-    enabled: !isNew,
-  });
+  const { data: client, isLoading } = useClient(isNew ? "" : id);
+  const createClient = useCreateClient();
+  const updateClient = useUpdateClient();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ClientFormData>({
-    resolver: zodResolver(clientSchema),
-    values: client ?? undefined,
-  });
-
-  const mutation = useMutation({
-    mutationFn: async (data: ClientFormData) => {
-      const res = await fetch("/api/v1/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Erreur");
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
-      addToast({ variant: "success", title: "Client enregistré" });
+  async function handleSubmit(data: ClientFormData) {
+    try {
+      if (isNew) {
+        await createClient.mutateAsync(data);
+        addToast({ variant: "success", title: "Client créé avec succès" });
+      } else {
+        await updateClient.mutateAsync({ id, data });
+        addToast({ variant: "success", title: "Client mis à jour" });
+      }
       router.push("/clients");
-    },
-    onError: () => {
+    } catch {
       addToast({ variant: "error", title: "Erreur lors de l'enregistrement" });
-    },
-  });
+    }
+  }
 
   if (isLoading && !isNew) {
-    return <div className="flex h-64 items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" /></div>;
+    return (
+      <div className="space-y-4">
+        <SkeletonCard />
+        <SkeletonCard />
+      </div>
+    );
   }
 
   return (
     <div>
       <div className="mb-6 flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+        <Button variant="ghost" size="sm" onClick={() => router.back()} aria-label="Retour">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-2xl font-bold text-gray-900">
-          {isNew ? "Nouveau client" : client?.name ?? "Client"}
+          {isNew ? "Nouveau client" : (client?.name ?? "Client")}
         </h1>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={handleSubmit((data) => mutation.mutate(data))}
-            className="grid gap-4 md:grid-cols-2"
-          >
-            <Input label="Nom *" {...register("name")} error={errors.name?.message} />
-            <Input label="Email" type="email" {...register("email")} error={errors.email?.message} />
-            <Input label="Téléphone" {...register("phone")} error={errors.phone?.message} />
-            <Input label="ICE" {...register("ice")} error={errors.ice?.message} />
-            <Input label="Adresse" {...register("address")} error={errors.address?.message} />
-            <Input label="Ville" {...register("city")} error={errors.city?.message} />
-            <Select
-              label="Type"
-              {...register("type")}
-              options={[
-                { value: "COMPANY", label: "Entreprise" },
-                { value: "INDIVIDUAL", label: "Particulier" },
-              ]}
-              error={errors.type?.message}
-            />
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Informations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ClientForm
+                defaultValues={client ?? undefined}
+                onSubmit={handleSubmit}
+                isLoading={createClient.isPending || updateClient.isPending}
+              />
+            </CardContent>
+          </Card>
+        </div>
 
-            <div className="md:col-span-2">
-              <Button
-                type="submit"
-                isLoading={mutation.isPending}
-                leftIcon={<Save className="h-4 w-4" />}
-              >
-                Enregistrer
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+        {!isNew && client?.invoices && client.invoices.length > 0 && (
+          <div>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-gray-500" />
+                  <CardTitle>Factures ({client.invoices.length})</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {client.invoices.slice(0, 10).map((inv) => (
+                  <button
+                    key={inv.id}
+                    className="flex w-full items-center justify-between rounded-lg border p-2 text-left text-sm hover:bg-gray-50"
+                    onClick={() => router.push(`/factures/${inv.id}`)}
+                  >
+                    <div>
+                      <p className="font-medium">{inv.number}</p>
+                      <p className="text-xs text-gray-500">{formatDate(inv.issueDate)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{formatCurrency(Number(inv.total))}</p>
+                      <Badge variant={statusVariant[inv.status] ?? "default"} className="text-xs">
+                        {statusLabel[inv.status] ?? inv.status}
+                      </Badge>
+                    </div>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
